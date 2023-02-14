@@ -5,7 +5,78 @@
   <link rel="stylesheet" type="text/css" href="/style.css">
   
   <script>
+    //handles all of the HTML page text changed and User interface stuff
+    const handleResponse = async (response) => {
+      const content = document.getElementById('content');
+      let contentType = response.headers.get('Content-Type');
 
+      switch (response.status) {
+        case 200:
+          content.innerHTML = `<b>Success</b>`;
+          break;
+        case 400:
+          content.innerHTML = `<b>Bad Request</b>`;
+          break;
+        case 401:
+          content.innerHTML = `<b>Unauthorized</b>`;
+          break;
+        case 403:
+          content.innerHTML = `<b>Forbidden</b>`;
+          break;
+        case 404:
+          content.innerHTML = `<b>Resource Not Found</b>`;
+          break;
+        case 500:
+          content.innerHTML = `<b>Internal Server Error</b>`;
+          break;
+        case 501:
+          content.innerHTML = `<b>Not Implemented</b>`;
+          break;
+        default:
+          content.innerHTML = `Error code not implemented by client.`;
+          break;
+      }
+
+      response.text().then((responseText) => {
+        let contentType = response.headers.get('Content-Type');
+        if (contentType === 'application/json') {
+
+          let parsedResponse = JSON.parse(responseText);
+          console.log(parsedResponse);
+          content.innerHTML += `<p>Message: ${parsedResponse.message}</p>`;
+
+        } else if (contentType === 'text/xml') {
+          let parsedResponse = new window.DOMParser().parseFromString(responseText, 'text/xml');
+          console.log(parsedResponse);
+          content.innerHTML += `<p>Message: ${parsedResponse.querySelector('message').textContent}</p>`;
+        }
+
+      });
+    };
+
+    //async update method
+    const requestUpdate = async (url, type) => {
+      const options = {
+        method: 'GET',
+        headers: { 'Accept': type },
+      };
+
+      let promise = fetch(url, options);
+      promise.then((response) => { handleResponse(response) });
+    };
+
+    const init = () => {
+
+      const page = document.querySelector('#page');
+      const type = document.querySelector('#type');
+
+      const values = () => requestUpdate(page.value, type.value);
+
+      const send = document.querySelector('#send');
+      send.addEventListener('click', values);
+    }
+
+    window.onload = init;
   </script>
 </head>
 <body>
